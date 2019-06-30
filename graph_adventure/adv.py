@@ -21,7 +21,7 @@ player = Player("Name", world.startingRoom)
 
 
 # FILL THIS IN
-traversalPath = ['n', 's', 's', 'w', 'e', 'n']
+traversalPath = ['n', 's']
 
 
 # TRAVERSAL TEST
@@ -97,6 +97,7 @@ class Stack():
 traversal_graph = {}
 
 def traverseGraph(visited = []):
+    move_queue = []
     # get starting room id and exit information, store in the graph
     starting_room = player.currentRoom.id
     starting_room_exits = player.currentRoom.getExits()
@@ -111,28 +112,45 @@ def traverseGraph(visited = []):
             unexplored_exits.append(exit)
     index = random.randint(0, len(unexplored_exits) - 1)
     traversalPath.append(unexplored_exits[index])
+    move_queue.append(unexplored_exits[index])
     # print(index)
     # for every direction in the traversal path...
-    for direction in traversalPath:
-        prev_room = player.currentRoom.id #STORE PREV ROOM INFO!
-        player.travel(direction)
-        # if the new room value is not in the traversal graph...
-        if player.currentRoom.id not in traversal_graph:
-            # store the exit information of the current room, setting '?' for every unexplored room and prev_room for the direction you came from
-            exits = player.currentRoom.getExits()
-            exit_list = {}
-            for exit in exits:
-                exit_list[exit] = '?'
-                if direction == 'n':
-                    exit_list['s'] = prev_room
-                elif direction == 's':
-                    exit_list['n'] = prev_room
-                if direction == 'e':
-                    exit_list['w'] = prev_room
-                if direction == 'w':
-                    exit_list['e'] = prev_room
-            traversal_graph[player.currentRoom.id] = exit_list
-            traversal_graph[prev_room][direction] = player.currentRoom.id
+    while move_queue:
+        for direction in move_queue:
+            prev_room = player.currentRoom.id #STORE PREV ROOM INFO!
+            player.travel(direction)
+            # if the new room value is not in the traversal graph...
+            if player.currentRoom.id not in traversal_graph:
+                # store the exit information of the current room, setting '?' for every unexplored room and prev_room for the direction you came from
+                exits = player.currentRoom.getExits()
+                exit_list = {}
+                for exit in exits:
+                    exit_list[exit] = '?'
+                    if direction == 'n':
+                        exit_list['s'] = prev_room
+                    elif direction == 's':
+                        exit_list['n'] = prev_room
+                    if direction == 'e':
+                        exit_list['w'] = prev_room
+                    if direction == 'w':
+                        exit_list['e'] = prev_room
+                traversal_graph[player.currentRoom.id] = exit_list
+                traversal_graph[prev_room][direction] = player.currentRoom.id
+                # find unexplored exits in current room
+                unexplored = []
+                for exit in traversal_graph[player.currentRoom.id]:
+                    if traversal_graph[player.currentRoom.id][exit] == '?':
+                        unexplored.append(exit)
+                if len(unexplored) == 1:
+                    traversalPath.append(unexplored[0])
+                    move_queue.append(unexplored[0])
+                elif len(unexplored) > 1:
+                    rand_index = random.randint(0, len(unexplored) - 1)
+                    traversalPath.append(unexplored[rand_index])
+                    move_queue.append(unexplored[rand_index])
+                    print(traversalPath)
+            move_queue.pop(0)
+            print(traversalPath)
     print(traversal_graph)
 
 traverseGraph()
