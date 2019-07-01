@@ -118,9 +118,12 @@ def traverseGraph(visited = []):
     while move_queue:
         for direction in move_queue:
             prev_room = player.currentRoom.id #STORE PREV ROOM INFO!
+            # move to new room using direction in move queue, remove that direction from move queue
             player.travel(direction)
+            move_queue.pop(0)
             # if the number of rooms traversed in the graph equals the total number of rooms, end the function
             if len(traversal_graph) == len(roomGraph):
+                print('DID IT')
                 return
             # if the new room value is not in the traversal graph...
             elif player.currentRoom.id not in traversal_graph:
@@ -151,10 +154,19 @@ def traverseGraph(visited = []):
                     rand_index = random.randint(0, len(unexplored) - 1)
                     traversalPath.append(unexplored[rand_index])
                     move_queue.append(unexplored[rand_index])
-                    print(traversalPath)
                 # WRITE CODE FOR IF AN UNEXPLORED ROOM IS A DEAD END!!!!
-                # elif len(unexplored) == 0:
-                move_queue.pop(0)
+                elif len(unexplored) == 0:
+                    exits = player.currentRoom.getExits()
+                    if len(exits) == 1:
+                        if direction == 'n':
+                            move_queue.append('s')
+                        elif direction == 's':
+                            move_queue.append('n')
+                        if direction == 'e':
+                            move_queue.append('w')
+                        if direction == 'w':
+                            move_queue.append('e')
+                        print('DEAD END')
                 print(traversalPath)
             # else, if the current room HAS been visited, explore the unvisited rooms
             elif player.currentRoom.id in traversal_graph:
@@ -178,10 +190,11 @@ def traverseGraph(visited = []):
                     rand_index = random.randint(0, len(unexplored) - 1)
                     traversalPath.append(unexplored[rand_index])
                     move_queue.append(unexplored[rand_index])
-                    print(traversalPath)
-                move_queue.pop(0)
+                # WRITE CODE FOR IF A ROOM HAS FULLY EXPLORED EXITS!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+                # elif len(unexplored) == 0:
                 print(traversalPath)
     print("Path is " + str(len(traversalPath)) + " moves long")
     print("Graph has " + str(len(traversal_graph)) + " entries")
+    print(traversal_graph)
 
 traverseGraph()
