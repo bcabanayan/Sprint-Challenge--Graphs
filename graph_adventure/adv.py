@@ -111,7 +111,6 @@ def traverseGraph(visited = []):
         if traversal_graph[starting_room][exit] == '?':
             starting_unexplored.append(exit)
     index = random.randint(0, len(starting_unexplored) - 1)
-    # traversalPath.append(starting_unexplored[index])
     move_queue.append(starting_unexplored[index])
     # print(index)
     # for every direction in the traversal path...
@@ -121,6 +120,7 @@ def traverseGraph(visited = []):
             # move to new room using direction in move queue, remove that direction from move queue
             player.travel(direction)
             traversalPath.append(move_queue.pop(0))
+            print('POPPED')
             # if the number of rooms traversed in the graph equals the total number of rooms, end the function
             if len(traversal_graph) == len(roomGraph):
                 # print("Path is " + str(len(traversalPath)) + " moves long")
@@ -152,11 +152,9 @@ def traverseGraph(visited = []):
                     if traversal_graph[player.currentRoom.id][exit] == '?':
                         unexplored.append(exit)
                 if len(unexplored) == 1:
-                    # traversalPath.append(unexplored[0])
                     move_queue.append(unexplored[0])
                 elif len(unexplored) > 1:
                     rand_index = random.randint(0, len(unexplored) - 1)
-                    # traversalPath.append(unexplored[rand_index])
                     move_queue.append(unexplored[rand_index])
                 # unexplored room is a dead end, conduct BFS
                 elif len(unexplored) == 0:
@@ -170,31 +168,29 @@ def traverseGraph(visited = []):
                             if '?' in q.queue[0].values():
                                 for room_number, room_map in traversal_graph.items():
                                     if room_map == vertex:
-                                        # WRITE A FUNCTION GET THE DIRECTIONS FROM THE ROOM NUMBERS TO ADD TO THE MOVE QUEUEUEUEUEUEU
+                                        # get directions from room numbers to add to the move queue
                                         a = 0
                                         b = 1
                                         directions = []
-                                        if len(path) > 1:
-                                            while b < len(path):
-                                                next_room = path[b]
-                                                for direction, room_num in traversal_graph[path[a]].items():
-                                                    if room_num == next_room:
-                                                        directions.append(direction)
-                                                a += 1
-                                                b += 1
-                                            move_queue.extend(directions)
-                                            print('this is the move q', move_queue)
-                                            # traversalPath.extend(directions)
-                                            print('this is the traversal path', traversalPath)
-                                            print('these are the directions', directions, 'from', player.currentRoom.id, 'to', room_number)
-                                        elif len(path) == 1:
-                                            next_room = path[0]
-                                            for direction, room_num in traversal_graph[a].items():
+                                        # if len(path) > 2:
+                                        while b < len(path):
+                                            next_room = path[b]
+                                            for direction, room_num in traversal_graph[path[a]].items():
                                                 if room_num == next_room:
-                                                    move_queue.append(direction)
-                                                    # traversalPath.append(direction)
-                                                    print('this is the move q - one exit', move_queue)
-                                                    print('this is the traversal path - one exit', traversalPath)
+                                                    directions.append(direction)
+                                            a += 1
+                                            b += 1
+                                        move_queue.extend(directions)
+                                        print('this is the move q', move_queue)
+                                        print('this is the traversal path', traversalPath)
+                                        print('these are the directions', directions, 'from', player.currentRoom.id, 'to', room_number)
+                                        # elif len(path) == 2:
+                                        #     next_room = path[b]
+                                        #     for direction, room_num in traversal_graph[a].items():
+                                        #         if room_num == next_room:
+                                        #             move_queue.append(direction)
+                                        #             print('this is the move q - one exit', move_queue)
+                                        #             print('this is the traversal path - one exit', traversalPath)
                             elif '?' not in list(q.queue[0].values()):
                                 for value in list(q.queue[0].values()):
                                     if value not in path:
@@ -220,57 +216,53 @@ def traverseGraph(visited = []):
                         unexplored.append(exit)
                         print('these are still unexplored', unexplored)
                 if len(unexplored) == 1:
-                    # traversalPath.append(unexplored[0])
                     move_queue.append(unexplored[0])
                 elif len(unexplored) > 1:
                     rand_index = random.randint(0, len(unexplored) - 1)
-                    # traversalPath.append(unexplored[rand_index])
                     move_queue.append(unexplored[rand_index])
                 # room that has been explored has no unexplored exits; execute BFS
-                elif len(unexplored) == 0:
-                    print('visited room, no more unexplored exits')
-                    # visited = []
-                    # path = [player.currentRoom.id]
-                    # q = Queue()
-                    # q.enqueue(traversal_graph[player.currentRoom.id])
-                    # while q.size() > 0:
-                    #     vertex = q.queue[0]
-                    #     if vertex not in visited:
-                    #         if '?' in q.queue[0].values():
-                    #             for room_number, room_map in traversal_graph.items():
-                    #                 if room_map == vertex:
-                    #                     # WRITE A FUNCTION GET THE DIRECTIONS FROM THE ROOM NUMBERS TO ADD TO THE MOVE QUEUEUEUEUEUEU
-                    #                     a = 0
-                    #                     b = 1
-                    #                     directions = []
-                    #                     if len(path) > 1:
-                    #                         while b < len(path):
-                    #                             next_room = path[b]
-                    #                             for direction, room_num in traversal_graph[path[a]].items():
-                    #                                 if room_num == next_room:
-                    #                                     directions.append(direction)
-                    #                             a += 1
-                    #                             b += 1
-                    #                         move_queue.extend(directions)
-                    #                         print('this is the move q', move_queue)
-                    #                         traversalPath.extend(directions)
-                    #                         print('this is the traversal path', traversalPath)
-                    #                         print('these are the directions', directions, 'from', player.currentRoom.id, 'to', room_number)
-                    #                     elif len(path) == 1:
-                    #                         next_room = path[0]
-                    #                         for direction, room_num in traversal_graph[a].items():
-                    #                             if room_num == next_room:
-                    #                                 move_queue.append(direction)
-                    #                                 traversalPath.append(direction)
-                    #                                 print('this is the move q - one exit', move_queue)
-                    #                                 print('this is the traversal path - one exit', traversalPath)
-                    #         elif '?' not in list(q.queue[0].values()):
-                    #             for value in list(q.queue[0].values()):
-                    #                 if value not in path:
-                    #                     path.append(value)
-                    #                 q.enqueue(traversal_graph[value])
-                    #         visited.append(vertex)
-                    #     q.dequeue() 
+                # elif len(unexplored) == 0:
+                #     print('visited room, no more unexplored exits')
+                #     visited = []
+                #     path = [player.currentRoom.id]
+                #     q = Queue()
+                #     q.enqueue(traversal_graph[player.currentRoom.id])
+                #     while q.size() > 0:
+                #         vertex = q.queue[0]
+                #         if vertex not in visited:
+                #             if '?' in q.queue[0].values():
+                #                 for room_number, room_map in traversal_graph.items():
+                #                     if room_map == vertex:
+                #                         # get directions from room numbers to add to the move queue
+                #                         a = 0
+                #                         b = 1
+                #                         directions = []
+                #                         if len(path) > 2:
+                #                             while b < len(path):
+                #                                 next_room = path[b]
+                #                                 for direction, room_num in traversal_graph[path[a]].items():
+                #                                     if room_num == next_room:
+                #                                         directions.append(direction)
+                #                                 a += 1
+                #                                 b += 1
+                #                             move_queue.extend(directions)
+                #                             print('this is the move q', move_queue)
+                #                             print('this is the traversal path', traversalPath)
+                #                             print('these are the directions', directions, 'from', player.currentRoom.id, 'to', room_number)
+                #                         elif len(path) == 2:
+                #                             next_room = path[b]
+                #                             for direction, room_num in traversal_graph[a].items():
+                #                                 if room_num == next_room:
+                #                                     move_queue.append(direction)
+                #                                     print('this is the move q - one exit', move_queue)
+                #                                     print('this is the traversal path - one exit', traversalPath)
+                #             elif '?' not in list(q.queue[0].values()):
+                #                 for value in list(q.queue[0].values()):
+                #                     if value not in path:
+                #                         path.append(value)
+                #                     q.enqueue(traversal_graph[value])
+                #             visited.append(vertex)
+                #         q.dequeue() 
     print("Path is " + str(len(traversalPath)) + " moves long")
     print("Graph has " + str(len(traversal_graph)) + " entries")
     print('Current room is', player.currentRoom.id)
