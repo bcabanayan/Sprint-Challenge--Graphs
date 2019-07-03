@@ -114,7 +114,7 @@ def traverseGraph(visited = []):
     index = random.randint(0, len(starting_unexplored) - 1)
     move_queue.append(starting_unexplored[index])
     # for every direction in the traversal path...
-    while move_queue: # [s, e, e]
+    while move_queue: 
         # for i in range(len(move_queue)):
         direction = move_queue[0]
         prev_room = player.currentRoom.id #STORE PREV ROOM INFO!
@@ -161,36 +161,90 @@ def traverseGraph(visited = []):
             # unexplored room is a dead end, conduct BFS
             elif len(unexplored) == 0:
                 visited = []
-                path = [player.currentRoom.id]
-                q = Queue()
-                q.enqueue(traversal_graph[player.currentRoom.id])
-                while q.size() > 0:
-                    vertex = q.queue[0]
-                    if vertex not in visited:
-                        if '?' in q.queue[0].values():
+                q = [[traversal_graph[player.currentRoom.id]]]
+                while len(q) > 0:
+                    path = q.pop(0)
+                    vertex = path[-1]
+                    # locate vertex with '?' in values, meaning unexplored exits
+                    if '?' in list(vertex.values()):
+                        path_in_numbers = []
+                        # convert path of vertices to path of room numbers
+                        for room_chart in path:
                             for room_number, room_map in traversal_graph.items():
-                                if room_map == vertex:
-                                    # get directions from room numbers to add to the move queue
-                                    a = 0
-                                    b = 1
-                                    directions = []
-                                    while b < len(path):
-                                        next_room = path[b]
-                                        for direction, room_num in traversal_graph[path[a]].items():
-                                            if room_num == next_room:
-                                                directions.append(direction)
-                                        a += 1
-                                        b += 1
-                                    move_queue.extend(directions)
-                            # for direction in move_queue:
-                            #     player.travel(direction)
-                        elif '?' not in list(q.queue[0].values()):
-                            for value in list(q.queue[0].values()):
-                                if value not in path:
-                                    path.append(value)
-                                q.enqueue(traversal_graph[value])
+                                if room_map == room_chart:
+                                    path_in_numbers.append(room_number)
+                        # convert path of room numbers to path of directions
+                        a = 0
+                        b = 1
+                        directions = []
+                        while b < len(path_in_numbers):
+                            next_room = path_in_numbers[b]
+                            for direction, room_num in traversal_graph[path_in_numbers[a]].items():
+                                if room_num == next_room:
+                                    directions.append(direction)
+                            a += 1
+                            b += 1
+                        move_queue.extend(directions)
+                        # travel newly established path back to room with unexplored exits
+                        while move_queue:
+                            player.travel(move_queue[0])
+                            traversalPath.append(move_queue.pop(0))
+                        # get new_dir that you just moved in
+                        new_dir = traversalPath[-1]
+                        # if the room is not yet in the graph...
+                        if player.currentRoom.id not in traversal_graph:
+                            # store the exit information of the current room, setting '?' for every unexplored room and prev_room for the direction you came from
+                            exits = player.currentRoom.getExits()
+                            exit_list = {}
+                            for exit in exits:
+                                exit_list[exit] = '?'
+                                if new_dir == 'n':
+                                    exit_list['s'] = path_in_numbers[len(path_in_numbers) - 2]
+                                elif new_dir == 's':
+                                    exit_list['n'] = path_in_numbers[len(path_in_numbers) - 2]
+                                elif new_dir == 'e':
+                                    exit_list['w'] = path_in_numbers[len(path_in_numbers) - 2]
+                                elif new_dir == 'w':
+                                    exit_list['e'] = path_in_numbers[len(path_in_numbers) - 2]
+                            traversal_graph[player.currentRoom.id] = exit_list
+                            traversal_graph[path_in_numbers[len(path_in_numbers) - 2]][new_dir] = player.currentRoom.id
+                            # find unexplored exits in current room
+                            unexplored = []
+                            for exit in traversal_graph[player.currentRoom.id]:
+                                if traversal_graph[player.currentRoom.id][exit] == '?':
+                                    unexplored.append(exit)
+                                if len(unexplored) == 1:
+                                    move_queue.append(unexplored[0])
+                                elif len(unexplored) > 1:
+                                    rand_index = random.randint(0, len(unexplored) - 1)
+                                    move_queue.append(unexplored[rand_index])
+                        # if the room is alreadty in the graph...
+                        elif player.currentRoom.id in traversal_graph:
+                            # store previous room's information in the traversal graph
+                            if new_dir == 'n':
+                                traversal_graph[player.currentRoom.id]['s'] = path_in_numbers[len(path_in_numbers) - 2]
+                            elif new_dir == 's':
+                                traversal_graph[player.currentRoom.id]['n'] = path_in_numbers[len(path_in_numbers) - 2]
+                            elif new_dir == 'e':
+                                traversal_graph[player.currentRoom.id]['w'] = path_in_numbers[len(path_in_numbers) - 2]
+                            elif new_dir == 'w':
+                                traversal_graph[player.currentRoom.id]['e'] = path_in_numbers[len(path_in_numbers) - 2]
+                            unexplored = []
+                            for exit in traversal_graph[player.currentRoom.id]:
+                                if traversal_graph[player.currentRoom.id][exit] == '?':
+                                    unexplored.append(exit)
+                            if len(unexplored) == 1:
+                                move_queue.append(unexplored[0])
+                            elif len(unexplored) > 1:
+                                rand_index = random.randint(0, len(unexplored) - 1)
+                                move_queue.append(unexplored[rand_index])
+                    # else, if vertex has not been visited and has no unexplored exits
+                    elif vertex not in visited:
+                        for value in list(vertex.values()):
+                            new_path = list(path)
+                            new_path.append(traversal_graph[value])
+                            q.append(new_path)
                         visited.append(vertex)
-                    q.dequeue()
         # else, if the current room HAS been visited, explore the unvisited rooms
         elif player.currentRoom.id in traversal_graph:
             # store previous room's information in the traversal graph
@@ -207,7 +261,6 @@ def traverseGraph(visited = []):
             for exit in traversal_graph[player.currentRoom.id]:
                 if traversal_graph[player.currentRoom.id][exit] == '?':
                     unexplored.append(exit)
-                    print('these are still unexplored', unexplored)
             if len(unexplored) == 1:
                 move_queue.append(unexplored[0])
             elif len(unexplored) > 1:
@@ -216,41 +269,94 @@ def traverseGraph(visited = []):
             # room that has been explored has no unexplored exits; execute BFS
             elif len(unexplored) == 0:
                 visited = []
-                path = [player.currentRoom.id]
-                q = Queue()
-                q.enqueue(traversal_graph[player.currentRoom.id])
-                while q.size() > 0:
-                    vertex = q.queue[0]
-                    if vertex not in visited:
-                        if '?' in q.queue[0].values():
+                q = [[traversal_graph[player.currentRoom.id]]]
+                while len(q) > 0:
+                    path = q.pop(0)
+                    vertex = path[-1]
+                    # locate vertex with '?' in values, meaning unexplored exits
+                    if '?' in list(vertex.values()):
+                        path_in_numbers = []
+                        # convert path of vertices to path of room numbers
+                        for room_chart in path:
                             for room_number, room_map in traversal_graph.items():
-                                if room_map == vertex:
-                                    # get directions from room numbers to add to the move queue
-                                    a = 0
-                                    b = 1
-                                    directions = []
-                                    while b < len(path):
-                                        next_room = path[b]
-                                        for direction, room_num in traversal_graph[path[a]].items():
-                                            if room_num == next_room:
-                                                directions.append(direction)
-                                        a += 1
-                                        b += 1
-                                    move_queue.extend(directions)
-                        elif '?' not in list(q.queue[0].values()):
-                            for value in list(q.queue[0].values()):
-                                if value not in path:
-                                    path.append(value)
-                                q.enqueue(traversal_graph[value])
+                                if room_map == room_chart:
+                                    path_in_numbers.append(room_number)
+                        # convert path of room numbers to path of directions
+                        a = 0
+                        b = 1
+                        directions = []
+                        while b < len(path_in_numbers):
+                            next_room = path_in_numbers[b]
+                            for direction, room_num in traversal_graph[path_in_numbers[a]].items():
+                                if room_num == next_room:
+                                    directions.append(direction)
+                            a += 1
+                            b += 1
+                        move_queue.extend(directions)
+                        # travel newly established path back to room with unexplored exits
+                        while move_queue:
+                            player.travel(move_queue[0])
+                            traversalPath.append(move_queue.pop(0))
+                        # get new_dir that you just moved in
+                        new_dir = traversalPath[-1]
+                        # if the room is not yet in the graph...
+                        if player.currentRoom.id not in traversal_graph:
+                            # store the exit information of the current room, setting '?' for every unexplored room and prev_room for the direction you came from
+                            exits = player.currentRoom.getExits()
+                            exit_list = {}
+                            for exit in exits:
+                                exit_list[exit] = '?'
+                                if new_dir == 'n':
+                                    exit_list['s'] = path_in_numbers[len(path_in_numbers) - 2]
+                                elif new_dir == 's':
+                                    exit_list['n'] = path_in_numbers[len(path_in_numbers) - 2]
+                                elif new_dir == 'e':
+                                    exit_list['w'] = path_in_numbers[len(path_in_numbers) - 2]
+                                elif new_dir == 'w':
+                                    exit_list['e'] = path_in_numbers[len(path_in_numbers) - 2]
+                            traversal_graph[player.currentRoom.id] = exit_list
+                            traversal_graph[path_in_numbers[len(path_in_numbers) - 2]][new_dir] = player.currentRoom.id
+                            # find unexplored exits in current room
+                            unexplored = []
+                            for exit in traversal_graph[player.currentRoom.id]:
+                                if traversal_graph[player.currentRoom.id][exit] == '?':
+                                    unexplored.append(exit)
+                                if len(unexplored) == 1:
+                                    move_queue.append(unexplored[0])
+                                elif len(unexplored) > 1:
+                                    rand_index = random.randint(0, len(unexplored) - 1)
+                                    move_queue.append(unexplored[rand_index])
+                        # if the room is alreadty in the graph...
+                        elif player.currentRoom.id in traversal_graph:
+                            # store previous room's information in the traversal graph
+                            if new_dir == 'n':
+                                traversal_graph[player.currentRoom.id]['s'] = path_in_numbers[len(path_in_numbers) - 2]
+                            elif new_dir == 's':
+                                traversal_graph[player.currentRoom.id]['n'] = path_in_numbers[len(path_in_numbers) - 2]
+                            elif new_dir == 'e':
+                                traversal_graph[player.currentRoom.id]['w'] = path_in_numbers[len(path_in_numbers) - 2]
+                            elif new_dir == 'w':
+                                traversal_graph[player.currentRoom.id]['e'] = path_in_numbers[len(path_in_numbers) - 2]
+                            unexplored = []
+                            for exit in traversal_graph[player.currentRoom.id]:
+                                if traversal_graph[player.currentRoom.id][exit] == '?':
+                                    unexplored.append(exit)
+                            if len(unexplored) == 1:
+                                move_queue.append(unexplored[0])
+                            elif len(unexplored) > 1:
+                                rand_index = random.randint(0, len(unexplored) - 1)
+                                move_queue.append(unexplored[rand_index])
+                    # else, if vertex has not been visited and has no unexplored exits
+                    elif vertex not in visited:
+                        for value in list(vertex.values()):
+                            new_path = list(path)
+                            new_path.append(traversal_graph[value])
+                            q.append(new_path)
                         visited.append(vertex)
-                    q.dequeue()
     print("Path is " + str(len(traversalPath)) + " moves long")
     print("Graph has " + str(len(traversal_graph)) + " entries")
     print('Current room is', player.currentRoom.id)
     print(traversal_graph)
     print(traversalPath)
 
-['s', 's', 'w', 'w', 'n', 'n', 'e', 'e', 'e', 'e', 'w', 'w', 'n', 'n', 's', 'w', 'w', 'n', 's', 'e', 'e']
-
 traverseGraph()
-
